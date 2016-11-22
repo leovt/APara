@@ -167,24 +167,24 @@ byte process_input(){
   return boat_moved;
 }
 
+void update_game(){
+    frame += 1;
+    if (frame % 8 == 0)
+      arduboy.tunes.tone(523, 25);
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
 
   byte boat_moved = process_input();
 
-  if (!(arduboy.nextFrame())){
-    if (boat_moved){
-      draw();
-      arduboy.display();
-    }
-    return;
+  if (arduboy.nextFrame()){
+    update_game();
+    draw();
+    arduboy.display();  
   }
-  frame += 1;
-
-  draw();
-  if (frame % 8 == 0)
-    arduboy.tunes.tone(523, 25);
-
-  
-  arduboy.display();  
+  else if (boat_moved){
+    draw();
+    arduboy.display();
+  }
 }
