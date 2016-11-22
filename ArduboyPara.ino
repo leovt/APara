@@ -131,12 +131,9 @@ void draw() {
   drawScore();
 }
 
-byte left = 0;
-byte right=0;
-
-
-void loop() {
-  // put your main code here, to run repeatedly:
+byte process_input(){
+  static byte left = 0;
+  static byte right=0;
 
   byte boat_moved = 0;
   
@@ -166,6 +163,14 @@ void loop() {
   else {
     right = 0;
   }
+
+  return boat_moved;
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  byte boat_moved = process_input();
 
   if (!(arduboy.nextFrame())){
     if (boat_moved){
