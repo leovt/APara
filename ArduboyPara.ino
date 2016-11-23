@@ -61,6 +61,7 @@ unsigned short score = 1234;
 byte troopers[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0};
 byte shark = 0;
 byte miss = 3;
+byte capture = 2;
 
 void new_game(char game_type){
   frame = 0;
@@ -71,6 +72,7 @@ void new_game(char game_type){
   troopers[sizeof(troopers)-1] = 0;
   shark = 0;
   miss = 0;
+  capture = 2;
 }
 
 void make_trooper(byte track, byte pos){
@@ -148,13 +150,14 @@ void draw() {
 
   const byte *const boats[] = {BT0, BT1, BT2};
   draw_static_sprite(boats[boat_pos]);
-
-  for (byte t=0; t<3; t++){
-    for (byte p=0; p<7; p++) {
-      if (Tracks[t][p]) {
-        draw_static_sprite(Tracks[t][p]);
-      }
-    }
+  
+  for(byte i=0; i<sizeof(troopers); i++){
+    byte trooper = troopers[i];
+    if (!(trooper & 0b11000000)) continue;
+    byte track = trooper >> 6;
+    byte pos = (trooper >> 3) & 7;
+    
+    draw_static_sprite(Tracks[track-1][pos]);
   }
   drawScore();
 }
@@ -193,8 +196,71 @@ byte process_input(){
 
 void update_game(){
     frame += 1;
-    if (frame % 8 == 0)
+
+    if(shark){
+      if(frame % 4 == 0){
+        shark -= 1;
+        if(shark){
+          arduboy.tunes.tone(222, 200);
+        }
+        else
+        {
+          miss += 1;
+          arduboy.tunes.tone(222, 400);
+        }
+      }
+    }
+    else{
+      byte sound = 0;
+      for(byte i=0; i<sizeof(troopers); i++){
+        byte trooper = troopers[i];
+        if (!(trooper & 0b11000000)) continue;
+
+        trooper += 1;
+        troopers[i] = trooper;
+        
+        byte track = trooper >> 6;
+        byte pos = (trooper >> 3) & 7;
+
+        if(trooper & 7 == 0) {
+          /* a trooper has just moved */
+          sound = 1;
+        }
+
+        if(pos == 6){
+          if (boat_pos == track-1){
+            capture -=1;
+            if (capture == 0){
+              score += 1;
+              kill_trooper(i);
+              capture = 2;
+            }
+          }
+        }
+        else if (pos == 7){
+           shark = track +2;
+           kill_trooper(i);
+        }
+        /* TODO: tree handling */
+      }
+
+      /* new troops */
+      if (frame % 32 == 2) {
+        make_trooper(1, 0);
+        sound = 1;
+      }
+      if (frame % 32 == 24) {
+        make_trooper(2, 1);
+        sound = 1;
+      }
+      if (frame % 32 == 28) {
+        make_trooper(3, 2);
+        sound = 1;
+      }
+      
+    if (sound)
       arduboy.tunes.tone(523, 25);
+    }
 }
 
 void loop() {
