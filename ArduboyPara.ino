@@ -222,7 +222,7 @@ void update_game(){
         byte track = trooper >> 6;
         byte pos = (trooper >> 3) & 7;
 
-        if(trooper & 7 == 0) {
+        if(!(trooper & 7)) {
           /* a trooper has just moved */
           sound = 1;
         }
