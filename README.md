@@ -1,2 +1,2 @@
-# ArduboyPara
-A Parachute Game for the Arduboy
+# APara
+A Parachute Game for Arduboy
