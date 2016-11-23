@@ -131,40 +131,36 @@ void draw() {
   drawScore();
 }
 
+#define LEFT_BUTTON_PRESSED 1
+#define RIGHT_BUTTON_PRESSED 2
+
 byte process_input(){
   static byte left = 0;
   static byte right=0;
 
-  byte boat_moved = 0;
+  byte result = 0;
   
   if(arduboy.pressed(LEFT_BUTTON)) {
     if (left == 0){
-      if (boat_pos>0) {
-        boat_pos--;
-        boat_moved = 1;
-      }
       left = 1;
+      result |= LEFT_BUTTON_PRESSED;
     }
   }
   else {
     left = 0;
   }
-  
     
   if(arduboy.pressed(B_BUTTON) || arduboy.pressed(RIGHT_BUTTON)) {
      if (right == 0){
-      if (boat_pos<2)  {
-        boat_pos++;
-        boat_moved = 1;
-      }
       right = 1;
+      result |= RIGHT_BUTTON_PRESSED;
     }
   }
   else {
     right = 0;
   }
 
-  return boat_moved;
+  return result;
 }
 
 void update_game(){
@@ -176,7 +172,18 @@ void update_game(){
 void loop() {
   // put your main code here, to run repeatedly:
 
-  byte boat_moved = process_input();
+  byte input = process_input();
+
+  byte boat_moved = 0;
+
+  if(input == LEFT_BUTTON_PRESSED && boat_pos > 0){
+        boat_pos--;
+        boat_moved = 1;    
+  }
+  if(input == RIGHT_BUTTON_PRESSED && boat_pos < 2){
+        boat_pos++;
+        boat_moved = 1;    
+  }
 
   if (arduboy.nextFrame()){
     update_game();
