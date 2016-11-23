@@ -58,11 +58,39 @@ Arduboy arduboy;
 byte frame = 0;
 byte boat_pos = 0;
 unsigned short score = 1234;
+byte troopers[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0};
+byte shark = 0;
+byte miss = 3;
+
+void new_game(char game_type){
+  frame = 0;
+  score = 0;
+  for (byte i=0; i<sizeof(troopers); i++){
+    troopers[i] = i+1;
+  }
+  troopers[sizeof(troopers)-1] = 0;
+  shark = 0;
+  miss = 0;
+}
+
+void make_trooper(byte track, byte pos){
+  byte i = troopers[0];
+  if (i == 0) return; // no free slots
+  troopers[0] = troopers[i];
+  troopers[i] = (track << 6) | (pos << 3);
+}
+
+void kill_trooper(byte i){
+  troopers[i] = troopers[0];
+  troopers[0] = i;
+}
 
 void setup() {
   // put your setup code here, to run once:
   arduboy.begin();
   arduboy.setFrameRate(8);
+  draw();
+  arduboy.display();
 }
 
 void draw_static_sprite(byte* sprite){
@@ -131,8 +159,8 @@ void draw() {
   drawScore();
 }
 
-#define LEFT_BUTTON_PRESSED 1
-#define RIGHT_BUTTON_PRESSED 2
+#define LEFT_A_BUTTON_PRESSED 1
+#define RIGHT_B_BUTTON_PRESSED 2
 
 byte process_input(){
   static byte left = 0;
@@ -140,10 +168,10 @@ byte process_input(){
 
   byte result = 0;
   
-  if(arduboy.pressed(LEFT_BUTTON)) {
+  if(arduboy.pressed(LEFT_BUTTON) || arduboy.pressed(A_BUTTON)) {
     if (left == 0){
       left = 1;
-      result |= LEFT_BUTTON_PRESSED;
+      result |= LEFT_A_BUTTON_PRESSED;
     }
   }
   else {
@@ -153,7 +181,7 @@ byte process_input(){
   if(arduboy.pressed(B_BUTTON) || arduboy.pressed(RIGHT_BUTTON)) {
      if (right == 0){
       right = 1;
-      result |= RIGHT_BUTTON_PRESSED;
+      result |= RIGHT_B_BUTTON_PRESSED;
     }
   }
   else {
@@ -174,24 +202,38 @@ void loop() {
 
   byte input = process_input();
 
-  byte boat_moved = 0;
-
-  if(input == LEFT_BUTTON_PRESSED && boat_pos > 0){
-        boat_pos--;
-        boat_moved = 1;    
+  if (miss >= 3){
+    if(input == LEFT_A_BUTTON_PRESSED) {
+      new_game('A');
+      draw();
+      arduboy.display();  
+    }
+    if(input == RIGHT_B_BUTTON_PRESSED) {
+      new_game('B');
+      draw();
+      arduboy.display();  
+    }
   }
-  if(input == RIGHT_BUTTON_PRESSED && boat_pos < 2){
-        boat_pos++;
-        boat_moved = 1;    
-  }
-
-  if (arduboy.nextFrame()){
-    update_game();
-    draw();
-    arduboy.display();  
-  }
-  else if (boat_moved){
-    draw();
-    arduboy.display();
+  else{
+    byte boat_moved = 0;
+  
+    if(input == LEFT_A_BUTTON_PRESSED && boat_pos > 0){
+          boat_pos--;
+          boat_moved = 1;    
+    }
+    if(input == RIGHT_B_BUTTON_PRESSED && boat_pos < 2){
+          boat_pos++;
+          boat_moved = 1;    
+    }
+  
+    if (arduboy.nextFrame()){
+      update_game();
+      draw();
+      arduboy.display();  
+    }
+    else if (boat_moved){
+      draw();
+      arduboy.display();
+    }
   }
 }
