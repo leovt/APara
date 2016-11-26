@@ -85,6 +85,22 @@ byte troopers[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0};
 byte shark = 0;
 byte miss = 3;
 byte capture = 2;
+byte level = 0;
+
+const unsigned short next_level[] = {10,30,60,100,150,210,280,360,450,550,660,780,910,1000,9999};
+const byte lvl_framerate[] =        { 8, 8, 8, 10, 10, 10, 12, 12, 12, 14, 14, 14, 14,  14,  18};
+const byte lvl_min_wait[]  =        {30,20,15, 15, 14, 13, 15, 14, 13, 15, 14, 13, 12,  10,  12};
+const byte lvl_jump_proba[] =       { 8,10,10, 12, 12, 12, 15, 12, 20, 12, 15, 15, 15,  20,  18};  
+
+void add_score(){
+  if (score < 9999){
+    score += 1;
+  }
+  if (score > next_level[level]){
+    level += 1;
+    arduboy.setFrameRate(lvl_framerate[level]);
+  }
+}
 
 void new_game(char game_type){
   frame = 0;
@@ -96,6 +112,7 @@ void new_game(char game_type){
   shark = 0;
   miss = 0;
   capture = 2;
+  level = 0;
 }
 
 void make_trooper(byte track, byte pos){
@@ -134,6 +151,10 @@ void drawScore(){
   arduboy.drawChar(23, 2, sc%10+'0', 0, 1, 1);
   sc /= 10;
   arduboy.drawChar(16, 2, sc%10+'0', 0, 1, 1);
+}
+
+void draw_debug(){
+   arduboy.drawChar(2, 2, level+'0', 1, 0, 1); 
 }
 
 void draw() {
@@ -183,6 +204,7 @@ void draw() {
     draw_static_sprite(Tracks[track-1][pos]);
   }
   drawScore();
+  draw_debug();
   switch (miss) {
     case 3:
     draw_static_sprite(M3);
@@ -256,14 +278,15 @@ void update_game(){
 
         if(!(trooper & 7)) {
           /* a trooper has just moved */
-          sound = 1;
+          sound |= 1;
         }
 
         if(pos == 6){
           if (boat_pos == track-1){
             capture -=1;
             if (capture == 0){
-              score += 1;
+              sound |= 2;
+              add_score();
               kill_trooper(i);
               capture = 2;
             }
@@ -276,23 +299,30 @@ void update_game(){
         /* TODO: tree handling */
       }
 
-      /* new troops */
-      if (frame % 32 == 2) {
-        make_trooper(1, 0);
-        sound = 1;
-      }
-      if (frame % 32 == 24) {
-        make_trooper(2, 1);
-        sound = 1;
-      }
-      if (frame % 32 == 28) {
-        make_trooper(3, 2);
-        sound = 1;
+      static byte wait[3] = {0,0,0};
+
+      for (byte tr=0; tr<3; tr++){
+        if (wait[tr]){
+          wait[tr]--;  
+        }
+        else{
+          if ((byte)rand() < lvl_jump_proba[level]) {
+            make_trooper(tr+1, tr);
+            sound |= 1;
+            wait[tr] = lvl_min_wait[level];
+          }
+        }
       }
       
-    if (sound)
-      arduboy.tunes.tone(523, 25);
-    }
+      if (sound & 2){
+        /* saved a trooper */
+        arduboy.tunes.tone(850, 50);      
+      } 
+      else if (sound){
+        /* a trooper moved */
+        arduboy.tunes.tone(523, 25);
+      }
+   }
 }
 
 void loop() {
