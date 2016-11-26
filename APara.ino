@@ -64,6 +64,11 @@ STATIC_SPRITE(T33, 79, 22, 6, 8, 63, 33, 33, 33, 33, 63);
 STATIC_SPRITE(T34, 77, 31, 6, 8, 63, 33, 33, 33, 33, 63);
 STATIC_SPRITE(T35, 76, 43, 6, 8, 63, 33, 33, 33, 33, 63);
 
+STATIC_SPRITE(MISS, 89, 45, 17, 8, 31,2,4,2,31,0,31,0,23,21,21,29,0,23,21,21,29);
+STATIC_SPRITE(M1, 105, 51, 10, 8, 7,15,109,119,126,124,120,56,24,8);
+STATIC_SPRITE(M2, 95, 51, 10, 8, 7,15,109,119,126,124,120,56,24,8);
+STATIC_SPRITE(M3, 85, 51, 10, 8, 7,15,109,119,126,124,120,56,24,8);
+
 const byte * const Tracks[3][7] = {
   {T11, T12, T13, T14, T15, T16, T17},
   {0, T21, T22, T23, T24, T25, T26},
@@ -178,6 +183,15 @@ void draw() {
     draw_static_sprite(Tracks[track-1][pos]);
   }
   drawScore();
+  switch (miss) {
+    case 3:
+    draw_static_sprite(M3);
+    case 2:
+    draw_static_sprite(M2);
+    case 1:
+    draw_static_sprite(M1);
+    draw_static_sprite(MISS);
+  }
 }
 
 #define LEFT_A_BUTTON_PRESSED 1
