@@ -1,6 +1,8 @@
 # APara
 A Parachute Game for Arduboy
 
+![APara Scene](APara.gif)
+
 Catch the poor paratroopers before they fall into the shark infested sea.
 
 ## Status
